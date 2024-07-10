@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 
@@ -35,7 +36,7 @@ app.post("/cars", (request, response) => {
   }
 
   const newCar = {
-    id: vehicles.length + 1,
+    id: uuidv4(),
     model,
     brand,
     year,
@@ -64,7 +65,12 @@ app.get("/cars", (request, response) => {
     return response.status(404).json({ message: "Nenhum veículo encontrado" });
   }
 
-  response.status(200).json(vehicles);
+  const mappedData = vehicles.map(
+    (car) =>
+      `ID: ${car.id} | Modelo: ${car.model} | Marca: ${car.brand} | Cor: ${car.color} | Ano: ${car.year} | Preço: ${car.price}`
+  );
+
+  response.status(200).json({ cars: mappedData });
 });
 
 // ----------------------- FILTRAR VEICULOS -------------------------
@@ -81,6 +87,8 @@ app.get("/cars/:brand", (request, response) => {
 
   const filteredVehicles = vehicles.filter((car) => car.brand === desiredBrand);
 
+  const mapped = filteredVehicles.map((car) => `ID: ${car.id} | Modelo: ${car.model} | Cor: ${car.color} | Preço: ${car.price}`)
+
   if (!filteredVehicles) {
     return response
       .status(404)
@@ -89,7 +97,7 @@ app.get("/cars/:brand", (request, response) => {
 
   response.status(200).json({
     message: "Veiculos filtrados com sucesso",
-    vehicles: filteredVehicles,
+    vehicles: mapped,
   });
 });
 
@@ -115,7 +123,7 @@ app.put("/cars/:id", (request, response) => {
       .json({ message: "Cor e preço são obrigatórios" });
   }
 
-  const findVehicles = vehicles.find((car) => car.id === parseInt(id));
+  const findVehicles = vehicles.find((car) => car.id === id);
 
   if (!findVehicles) {
     return response.status(404).json({ message: "Veículo não encontrado" });
@@ -143,7 +151,7 @@ app.put("/cars/:id", (request, response) => {
 app.delete("/cars/:id", (request, response) => {
   const { id } = request.params;
 
-  const findIndexVehicle = vehicles.findIndex((car) => car.id === parseInt(id));
+  const findIndexVehicle = vehicles.findIndex((car) => car.id === id);
 
   if (findIndexVehicle === -1) {
     return response.status(404).json({ message: "Veículo não encontrado" });
@@ -234,6 +242,7 @@ app.post("/login", async (request, response) => {
     }
 
     response.status(200).json({ message: "Login realizado com sucesso" });
+    
   } catch (error) {
     response.status(500).json({ message: "Erro ao fazer login" });
   }
